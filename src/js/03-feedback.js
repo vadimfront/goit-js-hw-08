@@ -1,41 +1,34 @@
 import { throttle } from 'lodash';
 
 const form = document.querySelector('.feedback-form');
-const emailInput = form.querySelector('[name="email"]');
-const messageInput = form.querySelector('[name="message"]');
+let formData = {};
 
-const saveStateToLocalStorage = throttle(() => {
-  const state = {
-    email: emailInput.value,
-    message: messageInput.value,
+const saveStateToLocalStorage = throttle(e => {
+  const { name, value } = e.target;
+  formData = {
+    ...formData,
+    [name]: value,
   };
-  localStorage.setItem('feedback-form-state', JSON.stringify(state));
+  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
 }, 500);
 
 function restoreStateFromLocalStorage() {
   const savedState = localStorage.getItem('feedback-form-state');
   if (savedState) {
-    const { email, message } = JSON.parse(savedState);
-    emailInput.value = email;
-    messageInput.value = message;
+    formData = JSON.parse(savedState);
+    Object.entries(formData).forEach(([name, value]) => {
+      form[name].value = value;
+    });
   }
 }
 
 function submitForm(e) {
   e.preventDefault();
-  const state = {
-    email: emailInput.value,
-    message: messageInput.value,
-  };
-  const { email, message } = state;
-  if (!email || !message) {
-    console.log('Nothing to send! Please fill in these fields and try again.');
-    return;
-  }
-  console.log(state);
+
+  console.log(formData);
   localStorage.removeItem('feedback-form-state');
-  emailInput.value = '';
-  messageInput.value = '';
+  form.reset();
+  formData = {};
 }
 
 form.addEventListener('input', saveStateToLocalStorage);
